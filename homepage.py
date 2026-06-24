@@ -333,7 +333,7 @@ def render_intro() -> None:
         <div class="title-row">
             <div>
                 <div class="eyebrow">Jaco, Costa Rica</div>
-                <h1 class="page-title">Pacific Sunset Jaco</h1>
+                <h1 class="page-title">White Witch Apartment</h1>
             </div>
             <p class="subtitle">
                 A calm apartment stay near the beach, shaped for slow mornings,
