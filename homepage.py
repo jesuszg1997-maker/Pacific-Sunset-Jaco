@@ -1,14 +1,15 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import calendar
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
 import streamlit as st
 
 
 st.set_page_config(
     page_title="White Witch Apartment",
-    page_icon="🌅",
+    page_icon="ðŸŒ…",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -21,7 +22,7 @@ PHOTOS = [
 ]
 
 MONTH_NAMES = list(calendar.month_name)
-WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
 
 def add_styles() -> None:
@@ -166,11 +167,17 @@ def add_styles() -> None:
                 padding-top: 2rem;
             }
 
-            .calendar-heading {
+            .calendar-heading,
+            .calendar-layout {
                 align-items: center;
                 display: flex;
                 justify-content: space-between;
                 gap: 1rem;
+            }
+
+            .calendar-layout {
+                align-items: flex-start;
+                gap: 2rem;
                 margin-bottom: 1rem;
             }
 
@@ -182,6 +189,33 @@ def add_styles() -> None:
                 margin: 0;
             }
 
+            .calendar-picker {
+                background: #10151d;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 8px;
+                box-shadow: 0 20px 50px rgba(16, 21, 29, 0.18);
+                max-width: 540px;
+                padding: 1.2rem;
+                width: 100%;
+            }
+
+            .calendar-nav {
+                align-items: center;
+                color: #ffffff;
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+            }
+
+            .calendar-month {
+                color: #ffffff;
+                font-size: 1.15rem;
+                font-weight: 700;
+                letter-spacing: 0;
+                margin: 0;
+                text-align: center;
+            }
+
             .selected-date {
                 background: #ffffff;
                 border: 1px solid var(--line);
@@ -189,18 +223,18 @@ def add_styles() -> None:
                 color: var(--ink);
                 font-weight: 600;
                 padding: 0.75rem 1rem;
-                text-align: right;
+                text-align: left;
             }
 
-            .calendar-weekdays,
-            .calendar-grid {
+            .calendar-weekdays {
                 display: grid;
-                gap: 0.45rem;
+                gap: 0.55rem;
                 grid-template-columns: repeat(7, minmax(0, 1fr));
+                margin-bottom: 0.55rem;
             }
 
             .weekday {
-                color: var(--muted);
+                color: rgba(255, 255, 255, 0.46);
                 font-size: 0.78rem;
                 font-weight: 700;
                 padding: 0.35rem 0;
@@ -208,45 +242,88 @@ def add_styles() -> None:
                 text-transform: uppercase;
             }
 
-            .calendar-cell {
+            .calendar-grid {
+                display: grid;
+                gap: 0.55rem;
+                grid-template-columns: repeat(7, minmax(0, 1fr));
+            }
+
+            .calendar-day,
+            .calendar-empty,
+            .calendar-arrow-button {
                 align-items: center;
-                background: #ffffff;
-                border: 1px solid var(--line);
                 border-radius: 8px;
-                color: var(--muted);
                 display: flex;
                 justify-content: center;
-                min-height: 3.25rem;
+                min-height: 3.8rem;
             }
 
-            .calendar-cell.is-selected {
-                background: var(--accent-soft);
-                border-color: var(--accent);
-                color: var(--ink);
+            .calendar-day,
+            .calendar-arrow-button {
+                color: #ffffff;
                 font-weight: 700;
-            }
-
-            div[data-testid="stButton"] > button {
-                border-radius: 8px;
-                border: 1px solid var(--line);
-                box-shadow: none;
-                color: var(--ink);
-                font-weight: 650;
-                min-height: 3.25rem;
+                text-decoration: none;
                 transition: 140ms ease;
-                width: 100%;
             }
 
-            div[data-testid="stButton"] > button:hover {
-                border-color: var(--accent);
-                color: var(--accent);
+            .calendar-day:hover,
+            .calendar-arrow-button:hover {
+                background: rgba(255, 255, 255, 0.08);
+                color: #ffffff;
                 transform: translateY(-1px);
             }
 
-            div[data-testid="stButton"] > button:focus:not(:active) {
-                border-color: var(--accent);
+            .calendar-day.is-selected {
+                background: var(--accent);
+            }
+
+            .calendar-arrow-button {
+                min-height: 2.8rem;
+                width: 2.8rem;
+            }
+
+            .availability-summary {
+                min-width: 270px;
+                width: 32%;
+            }
+
+            .summary-label {
+                color: var(--muted);
+                font-size: 0.8rem;
+                font-weight: 700;
+                letter-spacing: 0.08rem;
+                margin-bottom: 0.5rem;
+                text-transform: uppercase;
+            }
+
+            .availability-message {
+                align-items: center;
                 color: var(--accent);
-                box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.14);
+                display: flex;
+                font-size: 1.15rem;
+                font-weight: 800;
+                gap: 0.85rem;
+                margin-top: 1rem;
+                text-transform: lowercase;
+            }
+
+            .green-arrow {
+                background: var(--accent);
+                display: inline-block;
+                height: 3px;
+                position: relative;
+                width: 42px;
+            }
+
+            .green-arrow::after {
+                border-bottom: 7px solid transparent;
+                border-left: 10px solid var(--accent);
+                border-top: 7px solid transparent;
+                content: "";
+                position: absolute;
+                right: -1px;
+                top: 50%;
+                transform: translateY(-50%);
             }
 
             @media (max-width: 840px) {
@@ -265,9 +342,16 @@ def add_styles() -> None:
                 }
 
                 .title-row,
-                .calendar-heading {
+                .calendar-heading,
+                .calendar-layout {
                     align-items: flex-start;
                     flex-direction: column;
+                }
+
+                .calendar-picker,
+                .availability-summary {
+                    max-width: none;
+                    width: 100%;
                 }
 
                 .info-grid {
@@ -292,11 +376,16 @@ def add_styles() -> None:
                     border-right: 0;
                 }
 
-                .calendar-cell,
-                div[data-testid="stButton"] > button {
-                    min-height: 2.8rem;
+                .calendar-day,
+                .calendar-empty {
+                    min-height: 3rem;
                     padding-left: 0.25rem;
                     padding-right: 0.25rem;
+                }
+
+                .calendar-arrow-button {
+                    min-height: 2.6rem;
+                    width: 2.6rem;
                 }
             }
         </style>
@@ -313,10 +402,63 @@ def month_delta(base: date, delta: int) -> date:
     return date(year, month, day)
 
 
+def first_query_value(value: str | list[str] | None) -> str | None:
+    if isinstance(value, list):
+        return value[0] if value else None
+    return value
+
+
+def parse_date_param(value: str | list[str] | None) -> date | None:
+    raw_value = first_query_value(value)
+    if not raw_value:
+        return None
+
+    try:
+        return date.fromisoformat(raw_value)
+    except ValueError:
+        return None
+
+
+def parse_month_param(value: str | list[str] | None) -> date | None:
+    raw_value = first_query_value(value)
+    if not raw_value:
+        return None
+
+    try:
+        year, month = raw_value.split("-", maxsplit=1)
+        return date(int(year), int(month), 1)
+    except ValueError:
+        return None
+
+
+def calendar_url(selected: date, visible_month: date) -> str:
+    return "?" + urlencode(
+        {
+            "selected_date": selected.isoformat(),
+            "calendar_month": f"{visible_month.year:04d}-{visible_month.month:02d}",
+        }
+    )
+
+
 def ensure_calendar_state() -> None:
     today = date.today()
-    st.session_state.setdefault("selected_date", today)
-    st.session_state.setdefault("calendar_month", date(today.year, today.month, 1))
+    selected = (
+        parse_date_param(st.query_params.get("selected_date"))
+        or st.session_state.get("selected_date")
+        or today
+    )
+    visible_month = (
+        parse_month_param(st.query_params.get("calendar_month"))
+        or st.session_state.get("calendar_month")
+        or date(selected.year, selected.month, 1)
+    )
+
+    st.session_state["selected_date"] = selected
+    st.session_state["calendar_month"] = visible_month
+
+
+def format_selected_date(selected: date) -> str:
+    return f"{selected.strftime('%A, %B')} {selected.day}, {selected.year}"
 
 
 def render_photo_strip() -> None:
@@ -366,6 +508,24 @@ def render_intro() -> None:
 def render_calendar() -> None:
     selected = st.session_state["selected_date"]
     visible_month = st.session_state["calendar_month"]
+    month_calendar = calendar.Calendar(firstweekday=6)
+    previous_month = month_delta(visible_month, -1)
+    next_month = month_delta(visible_month, 1)
+    calendar_days = []
+
+    for week in month_calendar.monthdayscalendar(visible_month.year, visible_month.month):
+        for day_number in week:
+            if day_number == 0:
+                calendar_days.append('<div class="calendar-empty"></div>')
+                continue
+
+            cell_date = date(visible_month.year, visible_month.month, day_number)
+            selected_class = " is-selected" if cell_date == selected else ""
+            calendar_days.append(
+                f'<a class="calendar-day{selected_class}" '
+                f'href="{calendar_url(cell_date, date(cell_date.year, cell_date.month, 1))}">'
+                f"{day_number}</a>"
+            )
 
     st.markdown(
         f"""
@@ -373,64 +533,36 @@ def render_calendar() -> None:
             <div class="calendar-heading">
                 <div>
                     <div class="section-kicker">Availability</div>
-                    <h2 class="calendar-title">{MONTH_NAMES[visible_month.month]} {visible_month.year}</h2>
+                    <h2 class="calendar-title">Choose your date</h2>
                 </div>
-                <div class="selected-date">{selected.strftime("%A, %B %-d, %Y") if hasattr(selected, "strftime") else selected}</div>
+            </div>
+            <div class="calendar-layout">
+                <div class="calendar-picker">
+                    <div class="calendar-nav">
+                        <a class="calendar-arrow-button" href="{calendar_url(selected, previous_month)}">&lt;</a>
+                        <h3 class="calendar-month">{MONTH_NAMES[visible_month.month]} {visible_month.year}</h3>
+                        <a class="calendar-arrow-button" href="{calendar_url(selected, next_month)}">&gt;</a>
+                    </div>
+                    <div class="calendar-weekdays">
+                        {"".join(f'<div class="weekday">{day}</div>' for day in WEEKDAY_LABELS)}
+                    </div>
+                    <div class="calendar-grid">
+                        {"".join(calendar_days)}
+                    </div>
+                </div>
+                <div class="availability-summary">
+                <div class="summary-label">Date picked</div>
+                <div class="selected-date">{format_selected_date(selected)}</div>
+                <div class="availability-message">
+                    <span class="green-arrow"></span>
+                    <span>available!</span>
+                </div>
+            </div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-    nav_left, nav_center, nav_right = st.columns([1, 5, 1])
-    with nav_left:
-        if st.button("‹", key="prev_month", help="Previous month"):
-            st.session_state["calendar_month"] = month_delta(visible_month, -1)
-            st.rerun()
-    with nav_center:
-        st.date_input(
-            "Selected date",
-            key="selected_date",
-            label_visibility="collapsed",
-        )
-    with nav_right:
-        if st.button("›", key="next_month", help="Next month"):
-            st.session_state["calendar_month"] = month_delta(visible_month, 1)
-            st.rerun()
-
-    if selected.year != visible_month.year or selected.month != visible_month.month:
-        if "calendar_sync_done" not in st.session_state:
-            st.session_state["calendar_month"] = date(selected.year, selected.month, 1)
-            st.session_state["calendar_sync_done"] = True
-            st.rerun()
-    else:
-        st.session_state.pop("calendar_sync_done", None)
-
-    st.markdown(
-        '<div class="calendar-weekdays">'
-        + "".join(f'<div class="weekday">{day}</div>' for day in WEEKDAY_LABELS)
-        + "</div>",
-        unsafe_allow_html=True,
-    )
-
-    for week_index, week in enumerate(calendar.monthcalendar(visible_month.year, visible_month.month)):
-        columns = st.columns(7, gap="small")
-        for day_index, day_number in enumerate(week):
-            with columns[day_index]:
-                if day_number == 0:
-                    st.markdown('<div class="calendar-cell"></div>', unsafe_allow_html=True)
-                    continue
-
-                cell_date = date(visible_month.year, visible_month.month, day_number)
-                is_selected = cell_date == selected
-                if st.button(
-                    str(day_number),
-                    key=f"day_{visible_month.year}_{visible_month.month}_{week_index}_{day_number}",
-                    help=cell_date.strftime("%A, %B %d, %Y"),
-                    type="primary" if is_selected else "secondary",
-                ):
-                    st.session_state["selected_date"] = cell_date
-                    st.rerun()
 
 
 add_styles()
@@ -438,3 +570,4 @@ ensure_calendar_state()
 render_photo_strip()
 render_intro()
 render_calendar()
+
