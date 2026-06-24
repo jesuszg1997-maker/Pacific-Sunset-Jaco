@@ -488,7 +488,7 @@ def render_intro() -> None:
                 <div class="info-label">Bedrooms</div>
             </div>
             <div class="info-item">
-                <div class="info-value">4</div>
+                <div class="info-value">5</div>
                 <div class="info-label">Guests</div>
             </div>
             <div class="info-item">
